@@ -6,6 +6,7 @@ import json
 from dotenv import load_dotenv
 import os
 import pandas as pd
+from openpyxl import load_workbook
 
 pd.set_option('display.max_columns', 1000)
 load_dotenv(dotenv_path=r'D:\Pythonfail\My_Project\budget_lamer\.env')
@@ -14,6 +15,7 @@ token = os.getenv("TOKEN_DZEN_MONEY")
 now_month = datetime.date.today().strftime('%Y-%m')
 param = {"currentClientTimestamp": time(), "serverTimestamp": 0}
 headers = {"Authorization": "Bearer {}".format(token)}
+
 
 dataset = connect_api(url=r'https://api.zenmoney.ru/v8/diff/',
                       method='POST',
@@ -39,4 +41,16 @@ df_transaction.rename(columns={'title_x': 'category',
                                'title_y': 'income_account',
                                'title': 'outcome_account'}, inplace=True)
 df_transaction = df_transaction[['date', 'income', 'outcome', 'income_account', 'outcome_account', 'category']]
-print(df_transaction)
+# print(df_transaction)
+#
+# print(df_transaction.groupby(['category']).agg({'outcome': ['sum'],
+#                                                 'income': ['sum']}))
+
+
+# Другая функция
+wb = load_workbook(filename=r'D:\Pythonfail\My_Project\budget_lamer\Budget_2024.xlsx')
+ws = wb['April']['A']
+
+# Сначала ищем значение в истинных расходах, потом находим в книге, ну и прибаляем +2
+for i in range(len(ws)):
+    print(ws[i].value)
