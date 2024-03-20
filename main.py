@@ -1,6 +1,6 @@
 import datetime
 
-from getter import connect_api
+from utils import connect_api, add_to_excel
 from time import time
 import json
 from dotenv import load_dotenv
@@ -22,55 +22,19 @@ dataset = connect_api(url=r'https://api.zenmoney.ru/v8/diff/',
                       headers=headers,
                       json=param).json()
 
-df_transaction = pd.DataFrame(dataset.get('transaction', {}))
-df_tag = pd.DataFrame(dataset.get('tag', {}))[['id', 'title']]
-df_account = pd.DataFrame(dataset.get('account', {}))[['id', 'title', 'balance']]
-
-# Фильтруем транзакции
-df_transaction['date'] = df_transaction['date'].astype('datetime64[ns]')
-df_transaction['year_month'] = df_transaction['date'].dt.to_period('M')
-df_transaction = df_transaction.loc[(df_transaction['year_month'] == now_month) & (df_transaction['deleted'] == 0)]
-df_transaction = df_transaction[['date', 'income', 'outcome', 'incomeAccount', 'outcomeAccount', 'tag']]
-df_transaction['tag'] = df_transaction['tag'].map(lambda x: x[0] if x is not None else x)
-
-# Объединим dataframes
-df_transaction = (df_transaction.merge(df_tag, left_on='tag', right_on='id', how='left')
-                                .merge(df_account, left_on='incomeAccount', right_on='id', how='left')
-                                .merge(df_account, left_on='outcomeAccount', right_on='id', how='left'))
-df_transaction.rename(columns={'title_x': 'category',
-                               'title_y': 'income_account',
-                               'title': 'outcome_account'}, inplace=True)
-df_transaction = df_transaction[['date', 'income', 'outcome', 'income_account', 'outcome_account', 'category']]
-# print(df_transaction)
-#
-df_budget = df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
-                                                     income=('income', 'sum'))
 
 
 
-# Другая функция
+
+
 wb = load_workbook(filename=r'D:\Pythonfail\My_Project\budget_lamer\Budget_2024.xlsx')
 ws = wb['April']
 
-for category, value in df_budget.iterrows():
-    for cell in ws['A']:
-
-        tag = cell.value
-        placement = cell.offset(row=0, column=3).coordinate
-
-        if tag is None:
-            break
-
-        # Убираем числа в начале строки
-        if tag[0].isdigit():
-            tag = tag[3:]
-
-        if category.strip() == tag.strip():
-            ws[placement] = value['outcome']
-            break
+add_to_excel(ws_active=ws, dataframe=df_budget, column_df='outcome', column_excel='A')
+# Добавление доходов
+pass
 
 wb.save('XXX.xlsx')
 
 
-# for i in range(len(ws)):
-#     print(ws[i].value)
+
