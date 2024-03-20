@@ -43,14 +43,34 @@ df_transaction.rename(columns={'title_x': 'category',
 df_transaction = df_transaction[['date', 'income', 'outcome', 'income_account', 'outcome_account', 'category']]
 # print(df_transaction)
 #
-# print(df_transaction.groupby(['category']).agg({'outcome': ['sum'],
-#                                                 'income': ['sum']}))
+df_budget = df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
+                                                     income=('income', 'sum'))
+
 
 
 # Другая функция
 wb = load_workbook(filename=r'D:\Pythonfail\My_Project\budget_lamer\Budget_2024.xlsx')
-ws = wb['April']['A']
+ws = wb['April']
 
-# Сначала ищем значение в истинных расходах, потом находим в книге, ну и прибаляем +2
-for i in range(len(ws)):
-    print(ws[i].value)
+for category, value in df_budget.iterrows():
+    for cell in ws['A']:
+
+        tag = cell.value
+        placement = cell.offset(row=0, column=3).coordinate
+
+        if tag is None:
+            break
+
+        # Убираем числа в начале строки
+        if tag[0].isdigit():
+            tag = tag[3:]
+
+        if category.strip() == tag.strip():
+            ws[placement] = value['outcome']
+            break
+
+wb.save('XXX.xlsx')
+
+
+# for i in range(len(ws)):
+#     print(ws[i].value)
