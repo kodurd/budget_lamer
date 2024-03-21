@@ -1,10 +1,9 @@
 import pandas as pd
-from utils import add_to_excel
 
 
-def processing_budget(dataset: pd.DataFrame, now_month: str) -> pd.DataFrame:
+def processing_budget(dataset: pd.DataFrame, now_month: str):
     """
-
+    Приводит группированный датасет из выгрузки, по всему API
     :param dataset:
     :param now_month:
     :return:
@@ -29,5 +28,6 @@ def processing_budget(dataset: pd.DataFrame, now_month: str) -> pd.DataFrame:
                                    'title': 'outcome_account'}, inplace=True)
     df_transaction = df_transaction[['date', 'income', 'outcome', 'income_account', 'outcome_account', 'category']]
 
-    return df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
-                                                    income=('income', 'sum'))
+    df_budget = df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
+                                                         income=('income', 'sum'))
+    return df_budget, df_account
