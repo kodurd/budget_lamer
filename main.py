@@ -1,51 +1,39 @@
+from openpyxl import load_workbook
 from config import *
 from excel import *
-from utils import get_now_month_date
-from connect import connect_api
-from processing import processing_budget
-import pandas as pd
-from openpyxl import load_workbook
+from getter import *
+from processing import *
 
-# Отключаем предупреждения openpyxl
-pd.set_option('display.max_columns', 1000)
-pd.set_option('display.max_rows', 1000)
+# Disabling openpyxl warnings, as it does not support conditional formatting
+import warnings
+warnings.filterwarnings('ignore')
 
-
-# Получаем сгрупированный по доходам и расходам датасет бюджета
+# Getting data from the DZEN MONEY API
 dataset_budget = connect_api(url=url_api_dzen,
                              method='POST',
                              headers=headers_api_dzen,
                              json=params_api_dzen).json()
-# Получаем датасет по котировкам
-dataset_quotes = '...'
-# Получаем датасет по валютам
-dataset_currency = '...'
 
-
-# Обрабатываем полученные датасеты (приводим к нужному виду)
-df_budget, df_account = processing_budget(dataset=dataset_budget, now_month=get_now_month_date()[0])
+df_budget, df_account = groups_df_api_dzen(dataset=dataset_budget, now_month=now_month)
 
 df_outcome = df_budget[df_budget['outcome'] != 0][['outcome']]
 df_income = df_budget[df_budget['income'] != 0][['income']]
-df_account = df_account[df_account['balance'] != 0][['title', 'balance']].set_index('title')
 
-# Открываем книгу для работы с ней
 wb = load_workbook(filename=path_placement_wb)
 ws = wb[active_list]
 
-# Получаем месторасположение категорий и тикеров в книге Excel
+# We get the location of the expense and income categories and tickers in the Excel workbook
 placements_category_excel = get_place_on_col(ws=ws, columns=['A', 'G'])
 placement_tickers = get_place_on_range(ws=ws, span=['G32', 'G34'])
 
-# Заполняем книгу
-add_to_excel(ws=ws, data_budget=df_outcome, data_cells=placements_category_excel, col_offset=2)
-add_to_excel(ws=ws, data_budget=df_income, data_cells=placements_category_excel, col_offset=2)
-add_to_excel(ws=ws, data_budget=df_account, data_cells=placements_category_excel, col_offset=1)
+# Getting data from the MOEX API
+dataset_quotes = get_data_moex(url=url_api_moex, tickers=placement_tickers['value'].to_list())
+df_tickers = groups_df_api_moex(dataset=dataset_quotes)
+
+# Filling out an Excel workbook
+add_to_excel(ws=ws, df_write=df_outcome, df_excel=placements_category_excel, col_offset=2)
+add_to_excel(ws=ws, df_write=df_income, df_excel=placements_category_excel, col_offset=2)
+add_to_excel(ws=ws, df_write=df_account, df_excel=placements_category_excel, col_offset=1)
+add_to_excel(ws=ws, df_write=df_tickers, df_excel=placement_tickers, col_offset=3)
 
 wb.save(filename=path_save_wb)
-
-
-# Получить тикеры
-pass
-
-

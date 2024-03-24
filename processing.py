@@ -1,13 +1,15 @@
 import pandas as pd
+from typing import Tuple
 
 
-def processing_budget(dataset: pd.DataFrame, now_month: str):
+def groups_df_api_dzen(dataset: pd.DataFrame, now_month: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Groups datasets received from the DZEN MONEY API.
+    Returns two dataframes, the first one in the structure:
+    {'index': name_category, 'outcome': value, 'income': value}
+    the second in the structure:
+    {'index': name_account, 'balance': value}
     """
-    Приводит группированный датасет из выгрузки, по всему API
-    :param dataset:
-    :param now_month:
-    :return:
-    """
+
     df_transaction = pd.DataFrame(dataset.get('transaction', {}))
     df_tag = pd.DataFrame(dataset.get('tag', {}))[['id', 'title']]
     df_account = pd.DataFrame(dataset.get('account', {}))[['id', 'title', 'balance']]
@@ -30,7 +32,14 @@ def processing_budget(dataset: pd.DataFrame, now_month: str):
 
     df_budget = df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
                                                          income=('income', 'sum'))
+    df_account = df_account[df_account['balance'] != 0][['title', 'balance']].set_index('title')
+
     return df_budget, df_account
 
-def processing_tickers():
-    pass
+
+def groups_df_api_moex(dataset: pd.DataFrame) -> pd.DataFrame:
+    """The group responds to the MOEX API, which calculates the share price.
+    the structure's datarem is called: {'index': ticker, 'price' : price_shares}"""
+
+    dataset['price'] = dataset['value'] / dataset['volume']
+    return dataset[dataset['market_title'] == 'Рынок акций'][['secid', 'price']].set_index('secid')

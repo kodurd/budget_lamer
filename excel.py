@@ -4,8 +4,9 @@ from openpyxl.worksheet import worksheet
 
 
 def get_place_on_col(ws: worksheet.Worksheet, columns: list) -> pd.DataFrame:
-    """Читаем значение по столбцу или по нескольким или же по заданному диапозону"""
-
+    """Returns the dataframe of the structure: {value: Excel cell value, placement: Excel cell location ('A1')}
+    The input accepts a list of columns for which you need to get the location of cells.
+    """
     placements = [transform_in_dict([drop_trash_string(cell.value), cell.coordinate])
                   for column in columns
                   for cell in ws[column] if cell.value is not None]
@@ -14,7 +15,9 @@ def get_place_on_col(ws: worksheet.Worksheet, columns: list) -> pd.DataFrame:
 
 
 def get_place_on_range(ws: worksheet.Worksheet, span: list) -> pd.DataFrame:
-    """Читаем значение по диапозону"""
+    """Returns the dataframe of the structure: {value: Excel cell value, placement: Excel cell location ('A1')}
+    The input accepts a range of cells in the format ('A1', 'A3') for which the value must be obtained
+    """
 
     placements = [transform_in_dict([drop_trash_string(cell.value), cell.coordinate])
                   for cell_object in ws[span[0]:span[1]]
@@ -23,14 +26,19 @@ def get_place_on_range(ws: worksheet.Worksheet, span: list) -> pd.DataFrame:
     return pd.DataFrame(placements)
 
 
-def add_to_excel(ws: worksheet.Worksheet, data_budget: pd.DataFrame, data_cells: pd.DataFrame,
+def add_to_excel(ws: worksheet.Worksheet, df_write: pd.DataFrame, df_excel: pd.DataFrame,
                  col_offset: int = 1, row_offset: int = 0) -> None:
-    """Заполнение книги Excel сравнивая строки"""
+    """
+    Fills in an Excel workbook by comparing two dataframes.
+    All values from the first dataframe must be in the second, otherwise there is an exception.
+    As a result, the value from the first dataframe will end up in the Excel workbook opposite
+    the indexes of the second dataframe, taking into account the transmitted offset.
+    """
 
-    for name, value in data_budget.iterrows():
+    for name, value in df_write.iterrows():
         try:
-            cell = data_cells.loc[data_cells['value'] == name]['placement'].iloc[0]
+            cell = df_excel.loc[df_excel['value'] == name]['placement'].iloc[0]
         except Exception:
-            raise Exception(f"На листе Excel отсутствует данная категория: {name}")
+            raise Exception(f"The Excel worksheet is missing the value from the first dataframe.: {name}")
 
         ws[cell].offset(row=row_offset, column=col_offset).value = value.iloc[0]
