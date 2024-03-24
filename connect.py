@@ -3,7 +3,7 @@ from requests import HTTPError, RequestException
 
 
 def connect_api(url: str, method: str, headers: dict = None,
-                params: dict = None, json: dict = None) -> requests.Response:
+                params: dict = None, json: dict = None, data: dict = None) -> requests.Response:
     """
     Sends get and post requests to the API
     :param url: link to connect to the API
@@ -11,6 +11,7 @@ def connect_api(url: str, method: str, headers: dict = None,
     :param headers: request headers
     :param params: request parameters (usually passed to get)
     :param json: json request (usually passed in a post)
+    :param data:
     :return requests.Response:
     """
 
@@ -25,7 +26,7 @@ def connect_api(url: str, method: str, headers: dict = None,
 
     # Send query
     try:
-        response = request_method(url=url, headers=headers, params=params, json=json)
+        response = request_method(url=url, headers=headers, params=params, json=json, data=data)
         response.raise_for_status()
         return response
     except HTTPError as http_err:

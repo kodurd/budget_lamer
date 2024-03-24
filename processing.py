@@ -32,5 +32,5 @@ def processing_budget(dataset: pd.DataFrame, now_month: str):
                                                          income=('income', 'sum'))
     return df_budget, df_account
 
-def processing_ticer():
+def processing_tickers():
     pass
