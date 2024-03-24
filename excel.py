@@ -1,33 +1,36 @@
-from pandas import DataFrame
-def add_to_excel(ws_active: str, dataframe: DataFrame, column_df: str, column_excel: str,
-                 row_offset: int = 0, column_offset: int = 2) -> None:
-    """
+import pandas as pd
+from utils import transform_in_dict, drop_trash_string
+from openpyxl.worksheet import worksheet
 
-    :param ws_active:
-    :param dataframe:
-    :param row_offset:
-    :param column_offset:
-    :param column_df:
-    :param column_excel:
-    :return None:
-    """
 
-    for category, value in dataframe.iterrows():
-        # print(category)
-        for cell in ws_active[column_excel]:
-            tag = cell.value
-            placement = cell.offset(row=row_offset, column=column_offset).coordinate
-            print(tag)
-            if tag is None:
-                break
+def get_place_on_col(ws, columns: list) -> list[dict]:
+    """Читаем значение по столбцу или по нескольким или же по заданному диапозону"""
 
-            # Убираем числа в начале строки
-            if tag[0].isdigit():
-                tag = tag[3:]
+    placements = [transform_in_dict([drop_trash_string(cell.value), cell.coordinate])
+                  for column in columns
+                  for cell in ws[column] if cell.value is not None]
 
-            if category.strip() == tag.strip():
-                print(category, tag, value)
-                ws_active[placement] = value[column_df]
-                break
+    return placements
 
-    return None
+
+def get_place_on_range(ws, span: list) -> list[dict]:
+    """Читаем значение по диапозону"""
+
+    placements = [transform_in_dict([drop_trash_string(cell.value), cell.coordinate])
+                  for cell_object in ws[span[0]:span[1]]
+                  for cell in cell_object if cell.value is not None]
+
+    return placements
+
+
+def add_to_excel(ws: worksheet.Worksheet, data_budget: pd.DataFrame, data_cells: pd.DataFrame,
+                 col_offset: int = 1, row_offset: int = 0):
+    """Заполение книги Excel сравнивая строки"""
+
+    for name_budget, value_budget in data_budget.iterrows():
+        try:
+            cell = data_cells.loc[data_cells.index == name_budget]['placement'].iloc[0]
+        except Exception:
+            raise Exception(f"На листе Excel отсутствует данная категория: {name_budget}")
+
+        ws[cell].offset(row=row_offset, column=col_offset).value = value_budget.iloc[0]

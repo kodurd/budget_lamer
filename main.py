@@ -1,6 +1,5 @@
 import datetime
 from connect import connect_api
-from excel import add_to_excel
 from processing import processing_budget
 from time import time
 from dotenv import load_dotenv
@@ -29,20 +28,22 @@ wb = load_workbook(filename=r'D:\Pythonfail\My_Project\budget_lamer\Budget_2024.
 ws = wb['April']
 
 df_budget, df_account = processing_budget(dataset, now_month)
-# print(df_account[['title', 'balance']])
 
-# Добавление расходов
-# add_to_excel(ws_active=ws, dataframe=df_budget, column_df='outcome', column_excel='A')
-# # Добавление доходов
-# add_to_excel(ws_active=ws, dataframe=df_budget, column_df='income', column_excel='G')
-# Добавление баланса счетов
-add_to_excel(ws_active=ws, dataframe=df_account[['title', 'balance']].set_index('title'),
-             column_df='balance', column_excel='G', column_offset=1)
 
-# for i, x in df_account[['title', 'balance']].set_index('title').iterrows():
-#     print(x['balance'])
 
-# for i, x in df_budget.iterrows():
-#     print(x)
+
+
+
+add_to_excel(ws=ws, data_budget=df_budget, data_cells=data_cells, col_offset=2)
+
+
+# Получить тикеры
+# range = ['G32', 'G34']
+# df_ticer = pd.DataFrame(get_place_on_range(ws, range))
+#
+# print(df_ticer)
+#
+# data = connect_api()
+
 
 wb.save('XXX.xlsx')

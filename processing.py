@@ -31,3 +31,6 @@ def processing_budget(dataset: pd.DataFrame, now_month: str):
     df_budget = df_transaction.groupby(['category']).agg(outcome=('outcome', 'sum'),
                                                          income=('income', 'sum'))
     return df_budget, df_account
+
+def processing_ticer():
+    pass
