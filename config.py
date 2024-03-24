@@ -18,5 +18,5 @@ params_api_dzen = {"currentClientTimestamp": time(), "serverTimestamp": 0}
 url_api_moex = r'https://iss.moex.com/iss/securities/ticker/aggregates.json'
 
 # Excel Workbook Settings
-path_placement_wb = r'D:\Pythonfail\My_Project\budget_lamer\Budget_2024.xlsx'
-path_save_wb = r'D:\Pythonfail\My_Project\budget_lamer\XXX.xlsx'
+path_placement_wb = r'D:\Pythonfail\My_Project\budget_lamer\budget\Budget.xlsx'
+path_save_wb = r'D:\Pythonfail\My_Project\budget_lamer\budget\Budget.xlsx'
